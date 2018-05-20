@@ -4,19 +4,22 @@ Using [songyouwei](https://github.com/songyouwei/ABSA-PyTorch) framework and the
 
 ### BaseA ([base_a.py](./models/base_a.py))
 Content attention module
+
 ![base_a](assets/base_a.PNG)
 
 ### BaseB ([base_b.py](./models/base_b.py))
 Sentence-level content attention module
 - Adds the sentence representation to the calculation of the attention weight
 - Embedds the entire sentence into the output vector resulting of attn_applied
+
 ![base_b](assets/base_b.PNG)
 
 ### BaseC ([base_c.py](./models/base_c.py))
 Position attention based memory module *words arround the aspect have a greater impact on the sentiment polarity*
 - The memory is weighted by the position attention weights
 - The weighted memory is feed into the sentence-level content attention module
-![base_c](assets/base_C.PNG)
+
+![base_c](assets/base_c.PNG)
 
 ### Extensions
 Ontologies
