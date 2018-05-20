@@ -2,8 +2,7 @@
 
 > Aspect Based Sentiment Analysis, PyTorch Implementations.
 >
-> 基于方面的情感分析，使用PyTorch实现。
-
+>
 ![Packagist](https://img.shields.io/packagist/l/doctrine/orm.svg) ![PRsWelcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg) ![PythonVersion](https://img.shields.io/pypi/pyversions/Django.svg)
 
 ## Requirement
@@ -29,6 +28,22 @@ python train.py --model_name ian --dataset twitter --logdir ian_logs
 ```sh
 tensorboard --logdir=./ian_logs
 ```
+
+## Project
+
+Using [songyouwei](https://github.com/songyouwei/ABSA-PyTorch) framework as a starting point, the goal of this project is to implement an Ontology based Content Attention module for the task of ABSA
+
+### BaseA ([base_a.py](./models/base_a.py))
+Content attention module
+
+### BaseB ([base_b.py](./models/base_b.py))
+Sentence-level content attention module
+
+### BaseC ([base_c.py](./models/base_c.py))
+Position attention based memory module
+
+### Extensions
+Ontologies
 
 ## Implemented models
 
