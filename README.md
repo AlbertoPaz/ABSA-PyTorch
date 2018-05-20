@@ -1,4 +1,9 @@
-## Ontology based Deep Learning for ABSA
+# Ontology based Deep Learning for Aspect Based Sentiment Aalysis
+
+> Aspect Based Sentiment Analysis, PyTorch Implementations.
+>
+>
+![Packagist](https://img.shields.io/packagist/l/doctrine/orm.svg) ![PRsWelcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg) ![PythonVersion](https://img.shields.io/pypi/pyversions/Django.svg)
 
 Using [songyouwei](https://github.com/songyouwei/ABSA-PyTorch) framework and the [Cabasc model]() as starting point, the goal of this project is to implement an Ontology based Content Attention module for the ABSA task
 
