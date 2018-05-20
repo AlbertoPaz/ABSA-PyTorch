@@ -1,6 +1,6 @@
 ## Ontology based Deep Learning for ABSA
 
-Using [songyouwei](https://github.com/songyouwei/ABSA-PyTorch) framework and the [Cabasc model]() as starting point, the goal of this project is to implement an Ontology based Content Attention module for the task of ABSA
+Using [songyouwei](https://github.com/songyouwei/ABSA-PyTorch) framework and the [Cabasc model]() as starting point, the goal of this project is to implement an Ontology based Content Attention module for the ABSA task
 
 ### BaseA ([base_a.py](./models/base_a.py))
 Content attention module
