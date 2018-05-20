@@ -1,4 +1,4 @@
-# Ontology based Deep Learning for Aspect Based Sentiment Aalysis
+# Ontology based Deep Learning for ABSA
 
 > Aspect Based Sentiment Analysis, PyTorch Implementations.
 >
