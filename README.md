@@ -5,7 +5,10 @@
 >
 ![Packagist](https://img.shields.io/packagist/l/doctrine/orm.svg) ![PRsWelcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg) ![PythonVersion](https://img.shields.io/pypi/pyversions/Django.svg)
 
-Using [songyouwei](https://github.com/songyouwei/ABSA-PyTorch) framework and the [Cabasc model]() as starting point, the goal of this project is to implement an Ontology based Content Attention module for the ABSA task
+The aim of this research is to extend deep learning models with information coming from domain ontologies to improve their working especially when small amounts of annotated data are available. Ontologies can play a role in the feature formation of deep learning solutions or can inject knowledge in the appropriate components of the used deep learning network architecture. 
+
+The work here uses the framework and some of the implementations developed by [songyouwei](https://github.com/songyouwei/ABSA-PyTorch) as a starting point.
+## Implementations
 
 ### BaseA ([base_a.py](./models/base_a.py))
 Content attention module
