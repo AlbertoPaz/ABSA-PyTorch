@@ -8,7 +8,8 @@
 The aim of this research is to extend deep learning models with information coming from domain ontologies to improve their working especially when small amounts of annotated data are available. Ontologies can play a role in the feature formation of deep learning solutions or can inject knowledge in the appropriate components of the used deep learning network architecture. 
 
 The work here uses the framework and some of the implementations developed by [songyouwei](https://github.com/songyouwei/ABSA-PyTorch) as a starting point.
-## Implementations
+
+## New models
 
 ### BaseA ([base_a.py](./models/base_a.py))
 Content attention module
@@ -32,36 +33,6 @@ Position attention based memory module *words arround the aspect have a greater 
 ### Extensions
 Ontologies
 
-# ABSA-PyTorch
-
-> Aspect Based Sentiment Analysis, PyTorch Implementations.
->
->
-![Packagist](https://img.shields.io/packagist/l/doctrine/orm.svg) ![PRsWelcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg) ![PythonVersion](https://img.shields.io/pypi/pyversions/Django.svg)
-
-## Requirement
-
-* PyTorch 0.4.0
-* NumPy 1.13.3
-* tensorboardX 1.2
-* Python 3.6
-* GloVe pre-trained word vectors (See `data_utils.py` for more detail)
-  * Download pre-trained word vectors [here](https://github.com/stanfordnlp/GloVe#download-pre-trained-word-vectors),
-  * extract the [glove.twitter.27B.zip](http://nlp.stanford.edu/data/wordvecs/glove.twitter.27B.zip) and [glove.42B.300d.zip](http://nlp.stanford.edu/data/wordvecs/glove.42B.300d.zip) to the root directory
-
-## Usage
-
-### Training
-
-```sh
-python train.py --model_name ian --dataset twitter --logdir ian_logs
-```
-
-### See the training process (needs to install TensorFlow)
-
-```sh
-tensorboard --logdir=./ian_logs
-```
 ## Implemented models
 
 ### RAM ([ram.py](./models/ram.py))
@@ -92,6 +63,30 @@ Tang, Duyu, et al. "Effective LSTMs for Target-Dependent Sentiment Classificatio
 ### LSTM ([lstm.py](./models/lstm.py))
 
 ![lstm](assets/lstm.png)
+
+## Requirement
+
+* PyTorch 0.4.0
+* NumPy 1.13.3
+* tensorboardX 1.2
+* Python 3.6
+* GloVe pre-trained word vectors (See `data_utils.py` for more detail)
+  * Download pre-trained word vectors [here](https://github.com/stanfordnlp/GloVe#download-pre-trained-word-vectors),
+  * extract the [glove.twitter.27B.zip](http://nlp.stanford.edu/data/wordvecs/glove.twitter.27B.zip) and [glove.42B.300d.zip](http://nlp.stanford.edu/data/wordvecs/glove.42B.300d.zip) to the root directory
+
+## Usage
+
+### Training
+
+```sh
+python train.py --model_name ian --dataset twitter --logdir ian_logs
+```
+
+### See the training process (needs to install TensorFlow)
+
+```sh
+tensorboard --logdir=./ian_logs
+```
 
 
 ## Reviews / Surveys
