@@ -25,10 +25,13 @@ class Attention(nn.Module):
             self.weight = nn.Parameter(torch.Tensor(hidden_dim*2, 1))
         elif self.score_function == 'bi_linear':
             self.weight = nn.Parameter(torch.Tensor(hidden_dim, hidden_dim))
+        elif self.score_function == 'a':
+            self.weight = nn.Parameter(torch.Tensor(hidden_dim, 1))
         else:
             self.register_parameter('weight', None)
 
     def forward(self, k, q):
+        # k : memory --- q : aspect representation
         if len(q.shape) == 2:  # q_len missing
             q = torch.unsqueeze(q, dim=1)
         if len(k.shape) == 2:  # k_len missing
@@ -46,22 +49,35 @@ class Attention(nn.Module):
         qx = q.repeat(self.n_head, 1, 1).view(self.n_head, -1, self.embed_dim)  # (n_head, ?*q_len, embed_dim)
         kx = torch.bmm(kx, self.w_kx).view(-1, k_len, self.hidden_dim)  # (n_head*?, k_len, hidden_dim)
         qx = torch.bmm(qx, self.w_qx).view(-1, q_len, self.hidden_dim)  # (n_head*?, q_len, hidden_dim)
+        
         if self.score_function == 'scaled_dot_product':
             kt = kx.permute(0, 2, 1)
             qkt = torch.bmm(qx, kt)
             score = torch.div(qkt, math.sqrt(self.hidden_dim))
+            
+        # memnet: concatenates memory with aspect representation
         elif self.score_function == 'mlp':
             kxx = torch.unsqueeze(kx, dim=1).expand(-1, q_len, -1, -1)
             qxx = torch.unsqueeze(qx, dim=2).expand(-1, -1, k_len, -1)
-            kq = torch.cat((kxx, qxx), dim=-1)  # (n_head*?, q_len, k_len, hidden_dim*2)
+            kq = torch.cat((kxx, qxx), dim=-1)    # (n_head*?, q_len, k_len, hidden_dim*2)
             score = F.tanh(torch.matmul(kq, self.weight).squeeze(dim=-1))
+            
         elif self.score_function == 'bi_linear':
             qw = torch.matmul(q, self.weight)
             kt = k.permute(0, 2, 1)
             score = torch.bmm(qw, kt)
+            
+        # base a: sums memory representation and aspect representation                             
+        elif self.score_function == 'a':
+            kxx = torch.unsqueeze(kx, dim=1).expand(-1, q_len, -1, -1)
+            qxx = torch.unsqueeze(qx, dim=2).expand(-1, -1, k_len, -1)
+            kq = kxx +  qxx                                                  # TO DO : SUM also bias term b_1
+            score = torch.matmul(F.tanh(kq), self.weight).squeeze(dim=-1)    # scores = W_1 * tanh(W2*m_i + W_3*v_a + b_1)                    
         else:
             raise RuntimeError('invalid score_function')
-        score = F.softmax(score, dim=-1)
-        output = torch.bmm(score, kx)  # (n_head*?, q_len, hidden_dim)
-        output = torch.cat(torch.split(output, mb_size, dim=0), dim=-1)
-        return output
+                                       
+        score = F.softmax(score, dim=-1)                                     # attn_weights
+        output = torch.bmm(score, kx)  # (n_head*?, q_len, hidden_dim)       # attn_applied
+        output = torch.cat(torch.split(output, mb_size, dim=0), dim=-1)      # ???
+                                       
+        return output                                                        # \in R^d i suppose
