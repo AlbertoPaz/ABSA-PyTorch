@@ -43,7 +43,7 @@ class BaseA(nn.Module):
         # content attention module
         for _ in range(self.opt.hops): 
             x = self.x_linear(x)
-            memory = self.m_linear(memory)
+            #memory = self.m_linear(memory)
             v_ns = self.attention(memory, x)              # aspect-specific sentence representation
         
         # classifier

@@ -12,7 +12,7 @@ from layers.squeeze_embedding import SqueezeEmbedding
 
 class BaseC(nn.Module):
     '''
-    Sentence-level content attention module
+    Position attention based memory module
     '''
     def __init__(self, embedding_matrix, opt):
         super(BaseC, self).__init__()
@@ -20,8 +20,8 @@ class BaseC(nn.Module):
         self.embed = nn.Embedding.from_pretrained(torch.tensor(embedding_matrix, dtype=torch.float))
         self.squeeze_embedding = SqueezeEmbedding(batch_first=True)
         self.attention = Attention(opt.embed_dim, score_function='mlp')
-        self.m_linear = nn.Linear(opt.embed_dim, opt.embed_dim, bias = False)        # FwNN3: Feed forward NN with 3 inputs:
-        self.x_linear = nn.Linear(opt.embed_dim, opt.embed_dim, bias = False)        # HOW TO ADD A BIAS TERM TO THE SUM OF THE 3 ???
+        self.m_linear = nn.Linear(opt.embed_dim, opt.embed_dim, bias = False)        
+        self.x_linear = nn.Linear(opt.embed_dim, opt.embed_dim, bias = False)        
         self.s_linear = nn.Linear(opt.embed_dim, opt.embed_dim, bias = False)
         self.mlp = nn.Linear(opt.embed_dim, opt.embed_dim)                           # W4
         self.dense = nn.Linear(opt.embed_dim, opt.polarities_dim)                    # W5
@@ -66,10 +66,10 @@ class BaseC(nn.Module):
         memory = self.locationed_memory(memory, memory_len, left_len, aspect_len)
 
         # content attention module
-        for _ in range(self.opt.hops):  # USE 1 hop
+        for _ in range(self.opt.hops):  
             x = self.x_linear(x)
             s = self.s_linear(v_s)
-            v_ts = self.attention(memory, x)              #### TO DO : IMPLEMENT THE RIGHT ATTENTION MECHANISM
+            v_ts = self.attention(memory, x)              #### TO DO : IMPLEMENT THE RIGHT ATTENTION MECHANISM FwNN3
        
         # classifier
         v_ns = v_ts + v_s                                 # embedd the sentence 
