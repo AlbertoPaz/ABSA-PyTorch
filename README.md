@@ -33,7 +33,7 @@ Position attention based memory module *words arround the aspect have a greater 
 
 ![base_c](assets/base_c.PNG)
 
-### Extensions
+## Extensions
 Ontologies
 
 ## Implemented models
