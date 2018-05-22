@@ -7,7 +7,7 @@
 
 The aim of this research is to extend deep learning models with information coming from domain ontologies to improve their working especially when small amounts of annotated data are available. Ontologies can play a role in the feature formation of deep learning solutions or can inject knowledge in the appropriate components of the used deep learning network architecture. 
 
-The work here uses the framework and some of the implementations developed by [songyouwei](https://github.com/songyouwei/ABSA-PyTorch) as a starting point.
+The work here uses the framework and some of the implementations developed by [songyouwei](https://github.com/songyouwei/ABSA-PyTorch) as a starting point to implement and extend the [Cabasc model](http://delivery.acm.org/10.1145/3190000/3186001/p1023-liu.pdf?ip=145.5.235.170&id=3186001&acc=OPEN&key=4D4702B0C3E38B35%2E4D4702B0C3E38B35%2E4D4702B0C3E38B35%2E6D218144511F3437&__acm__=1526999516_9dab4eb787f29d2900922a6b77f31c12)
 
 ## New models
 
@@ -76,21 +76,6 @@ Tang, Duyu, et al. "Effective LSTMs for Target-Dependent Sentiment Classificatio
 * GloVe pre-trained word vectors (See `data_utils.py` for more detail)
   * Download pre-trained word vectors [here](https://github.com/stanfordnlp/GloVe#download-pre-trained-word-vectors),
   * extract the [glove.twitter.27B.zip](http://nlp.stanford.edu/data/wordvecs/glove.twitter.27B.zip) and [glove.42B.300d.zip](http://nlp.stanford.edu/data/wordvecs/glove.42B.300d.zip) to the root directory
-
-## Usage
-
-### Training
-
-```sh
-python train.py --model_name ian --dataset twitter --logdir ian_logs
-```
-
-### See the training process (needs to install TensorFlow)
-
-```sh
-tensorboard --logdir=./ian_logs
-```
-
 
 ## Reviews / Surveys
 
