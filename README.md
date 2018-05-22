@@ -13,6 +13,8 @@ The work here uses the framework and some of the implementations developed by [s
 
 ### BaseA ([base_a.py](./models/base_a.py))
 Content attention module
+- Attention weight of memory slices is calculated using a FwNN with 2 inputs. This differes from memnet that uses concatenation
+$$score_i = W_1 * tanh(W_2m_i + W_3 v_a +b_1)$$
 
 ![base_a](assets/base_a.PNG)
 
