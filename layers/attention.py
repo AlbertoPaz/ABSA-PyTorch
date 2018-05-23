@@ -19,14 +19,15 @@ class Attention(nn.Module):
         self.hidden_dim = hidden_dim
         self.n_head = n_head
         self.score_function = score_function
-        self.w_kx = nn.Parameter(torch.FloatTensor(n_head, embed_dim, hidden_dim))
-        self.w_qx = nn.Parameter(torch.FloatTensor(n_head, embed_dim, hidden_dim))
+        self.w_kx = nn.Parameter(torch.FloatTensor(n_head, embed_dim, hidden_dim))               # W2
+        self.w_qx = nn.Parameter(torch.FloatTensor(n_head, embed_dim, hidden_dim))               # W3
         if score_function == 'mlp':
             self.weight = nn.Parameter(torch.Tensor(hidden_dim*2, 1))
         elif self.score_function == 'bi_linear':
             self.weight = nn.Parameter(torch.Tensor(hidden_dim, hidden_dim))
-        elif self.score_function == 'a':
-            self.weight = nn.Parameter(torch.Tensor(hidden_dim, 1))
+        elif self.score_function == 'mlp_sum':
+            self.weight = nn.Parameter(torch.Tensor(hidden_dim, 1))                              # W1
+            self.b1 = nn.Parameter(torch.Tensor(hidden_dim))
         else:
             self.register_parameter('weight', None)
 
@@ -67,14 +68,14 @@ class Attention(nn.Module):
             kt = k.permute(0, 2, 1)
             score = torch.bmm(qw, kt)
             
-        # base a: sums memory representation and aspect representation                             
-        elif self.score_function == 'a':
-            kxx = torch.unsqueeze(kx, dim=1).expand(-1, q_len, -1, -1)
+        # FwNN2               
+        elif self.score_function == 'mlp_sum':
+            kxx = torch.unsqueeze(kx, dim=1).expand(-1, q_len, -1, -1)      # expanded to achieve so each memory slice gets summed the v_a
             qxx = torch.unsqueeze(qx, dim=2).expand(-1, -1, k_len, -1)
-            kq = kxx +  qxx                                                  # TO DO : SUM also bias term b_1
-            score = torch.matmul(F.tanh(kq), self.weight).squeeze(dim=-1)    # scores = W_1 * tanh(W2*m_i + W_3*v_a + b_1)                    
-        else:
-            raise RuntimeError('invalid score_function')
+            kq = kxx +  qxx + self.b1                                       # W2 * m_i + W3 * v_a + bias           
+            score = torch.matmul(F.tanh(kq), self.weight).squeeze(dim=-1)   # W1 * tanh(kq)    
+            
+        else: raise RuntimeError('invalid score_function')
                                        
         score = F.softmax(score, dim=-1)                                     # attn_weights
         output = torch.bmm(score, kx)  # (n_head*?, q_len, hidden_dim)       # attn_applied
