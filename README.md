@@ -7,7 +7,7 @@
 
 The aim of this research is to extend deep learning models with information coming from domain ontologies to improve their working especially when small amounts of annotated data are available. Ontologies can play a role in the feature formation of deep learning solutions or can inject knowledge in the appropriate components of the used deep learning network architecture. 
 
-The work here uses the framework and some of the implementations developed by [songyouwei](https://github.com/songyouwei/ABSA-PyTorch) as a starting point to implement and extend the [Cabasc model](http://delivery.acm.org/10.1145/3190000/3186001/p1023-liu.pdf?ip=145.5.235.170&id=3186001&acc=OPEN&key=4D4702B0C3E38B35%2E4D4702B0C3E38B35%2E4D4702B0C3E38B35%2E6D218144511F3437&__acm__=1526999516_9dab4eb787f29d2900922a6b77f31c12)
+The work here uses the framework and some of the implementations developed by [songyouwei](https://github.com/songyouwei/ABSA-PyTorch) as a starting point to implement and extend the [Cabasc model](http://delivery.acm.org/10.1145/3190000/3186001/p1023-liu.pdf?ip=213.127.95.196&id=3186001&acc=OPEN&key=4D4702B0C3E38B35%2E4D4702B0C3E38B35%2E4D4702B0C3E38B35%2E6D218144511F3437&__acm__=1527064185_6f5477823bfa4cf6ec64f79bf4b9561e)
 
 ## New models
 
