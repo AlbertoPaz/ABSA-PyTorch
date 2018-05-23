@@ -11,9 +11,6 @@ import torch.nn.functional as F
 from layers.squeeze_embedding import SqueezeEmbedding
 
 class BaseB(nn.Module):
-    '''
-    Sentence-level content attention module
-    '''
     def __init__(self, embedding_matrix, opt):
         super(BaseB, self).__init__()
         self.opt = opt
@@ -51,7 +48,7 @@ class BaseB(nn.Module):
         memory = self.squeeze_embedding(memory, memory_len)
 
         # content attention module
-        for _ in range(self.opt.hops):  # USE 1 hop
+        for _ in range(self.opt.hops):  
             x = self.x_linear(x)
             s = self.s_linear(v_s)
             v_ts = self.attention(memory, x)              #### TO DO : IMPLEMENT THE RIGHT ATTENTION MECHANISM AND + s in the FwNN3

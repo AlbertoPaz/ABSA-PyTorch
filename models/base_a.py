@@ -16,8 +16,7 @@ class BaseA(nn.Module):
         self.opt = opt
         self.embed = nn.Embedding.from_pretrained(torch.tensor(embedding_matrix, dtype=torch.float))
         self.squeeze_embedding = SqueezeEmbedding(batch_first=True)
-        self.attention = Attention(opt.embed_dim, score_function='a')
-        self.m_linear = nn.Linear(opt.embed_dim, opt.embed_dim)                                 # W2
+        self.attention = Attention(opt.embed_dim, score_function='mlp_sum')
         self.x_linear = nn.Linear(opt.embed_dim, opt.embed_dim)                                 # W3
         self.mlp = nn.Linear(opt.embed_dim, opt.embed_dim)                                      # W4
         self.dense = nn.Linear(opt.embed_dim, opt.polarities_dim)                               # W5
@@ -28,9 +27,9 @@ class BaseA(nn.Module):
         text_raw_indices, aspect_indices = inputs[0], inputs[1]
         memory_len = torch.sum(text_raw_indices != 0, dim=-1)
         aspect_len = torch.sum(aspect_indices != 0, dim=-1)
-        nonzeros_aspect = torch.tensor(aspect_len, dtype=torch.float).to(self.opt.device)
         
         # aspect representation
+        nonzeros_aspect = torch.tensor(aspect_len, dtype=torch.float).to(self.opt.device)
         aspect = self.embed(aspect_indices)
         aspect = torch.sum(aspect, dim=1)
         aspect = torch.div(aspect, nonzeros_aspect.view(nonzeros_aspect.size(0), 1))
@@ -42,8 +41,7 @@ class BaseA(nn.Module):
         
         # content attention module
         for _ in range(self.opt.hops): 
-            x = self.x_linear(x)
-            #memory = self.m_linear(memory)
+            #x = self.x_linear(x)
             v_ns = self.attention(memory, x)              # aspect-specific sentence representation
         
         # classifier
@@ -51,4 +49,5 @@ class BaseA(nn.Module):
         v_ms = F.tanh(self.mlp(v_ns))
         out = self.dense(v_ms)
         out = F.softmax(out, dim=-1)   
+        
         return out
