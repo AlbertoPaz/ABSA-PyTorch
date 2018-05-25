@@ -9,12 +9,11 @@ The aim of this research is to extend deep learning models with information comi
 
 The work here uses the framework and some of the implementations developed by [songyouwei](https://github.com/songyouwei/ABSA-PyTorch) as a starting point to implement and extend the [Cabasc model](http://delivery.acm.org/10.1145/3190000/3186001/p1023-liu.pdf?ip=213.127.95.196&id=3186001&acc=OPEN&key=4D4702B0C3E38B35%2E4D4702B0C3E38B35%2E4D4702B0C3E38B35%2E6D218144511F3437&__acm__=1527064185_6f5477823bfa4cf6ec64f79bf4b9561e)
 
-[x] BaseA
-[x] BaseB
-[x] BaseC
-[] Cabasc
-[] Ontology
-[] Set up experiments
+- [x] Baseline models
+- [ ] Cabasc
+- [ ] Ontology
+- [ ] Evaluation framework
+- [ ] Set up experiments
 
 ## New models
 
