@@ -31,6 +31,12 @@ class Attention(nn.Module):
         else:
             self.register_parameter('weight', None)
 
+            
+    ''' TRY JONATAN WAY
+   score =  W_1 tanh ( W_m    m_i  +  W_a  + b  )
+    (1)    (dx1)      (dxd)   (d)    (dxd)  (d) 
+    '''
+    
     def forward(self, k, q):
         # k : memory --- q : aspect representation
         if len(q.shape) == 2:  # q_len missing
