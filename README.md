@@ -11,7 +11,9 @@ The work here uses the framework and some of the implementations developed by [s
 
 - [x] Baseline models
 - [x] Cabasc
-- [ ] Ontology
+- [ ] Modularization
+- [ ] Validation
+- [ ] Extensions
 - [ ] Evaluation framework
 - [ ] Set up experiments
 
