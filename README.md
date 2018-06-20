@@ -1,4 +1,4 @@
-# Ontology based Deep Learning for ABSA
+# Dependency-based Attention Network for ABSA
 
 > Aspect Based Sentiment Analysis, PyTorch Implementations.
 >
