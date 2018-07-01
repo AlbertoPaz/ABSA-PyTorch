@@ -9,39 +9,33 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from layers.squeeze_embedding import SqueezeEmbedding
-from layers.dynamic_rnn import DynamicLSTM          # context attention
+from layers.dynamic_rnn import DynamicLSTM         
 
+# Flip a tensor along a given dimension
+# https://github.com/pytorch/pytorch/issues/229
+def flip(x, dim):
+    indices = [slice(None)] * x.dim()
+    indices[dim] = torch.arange(x.size(dim) - 1, -1, -1,
+                                dtype=torch.long, device=x.device)
+    return x[tuple(indices)]
+
+# Content Attention Attention Model for ABSA
 class Cabasc(nn.Module):
-    def __init__(self, embedding_matrix, opt):
+    def __init__(self, embedding_matrix, opt, memory_weighter = 'cam'):
         super(Cabasc, self).__init__()
         self.opt = opt
+        self.memory_weighter = memory_weighter
         self.embed = nn.Embedding.from_pretrained(torch.tensor(embedding_matrix, dtype=torch.float))
         self.squeeze_embedding = SqueezeEmbedding(batch_first=True)
-        self.attention = Attention(opt.embed_dim, score_function='mlp')
+        self.attention = Attention(opt.embed_dim, score_function='mlp')              # content attention
         self.m_linear = nn.Linear(opt.embed_dim, opt.embed_dim, bias = False)        
-        self.x_linear = nn.Linear(opt.embed_dim, opt.embed_dim, bias = False)        
-        self.s_linear = nn.Linear(opt.embed_dim, opt.embed_dim, bias = False)
         self.mlp = nn.Linear(opt.embed_dim, opt.embed_dim)                           # W4
         self.dense = nn.Linear(opt.embed_dim, opt.polarities_dim)                    # W5
         # context attention layer
-        self.rnn_l = DynamicLSTM(opt.embed_dim, opt.hidden_dim, num_layers=1, batch_first=True)
-        self.rnn_r = DynamicLSTM(opt.embed_dim, opt.hidden_dim, num_layers=1, batch_first=True)
+        self.rnn_l = DynamicLSTM(opt.embed_dim, opt.hidden_dim, num_layers=1, batch_first=True, rnn_type = 'GRU') 
+        self.rnn_r = DynamicLSTM(opt.embed_dim, opt.hidden_dim, num_layers=1, batch_first=True, rnn_type = 'GRU')
         self.mlp_l = nn.Linear(opt.hidden_dim, 1)
         self.mlp_r = nn.Linear(opt.hidden_dim, 1)
-        
-    def locationed_memory(self, memory, memory_len, left_len, aspect_len):
-        # based on the absolute distance to the first border word of the aspect
-        
-        for i in range(memory.size(0)):
-            for idx in range(memory_len[i]):
-                aspect_start = left_len[i] - aspect_len[i]
-                aspect_end = left_len[i] 
-                if idx < aspect_start: l = aspect_start.item() - idx                   
-                elif idx <= aspect_end: l = 0
-                else: l = idx - aspect_end.item()
-                memory[i][idx] *= (1-float(l)/int(memory_len[i]))
-               
-        return memory
     
     def context_attention(self, x_l, x_r, memory, memory_len, aspect_len):
         
@@ -60,13 +54,28 @@ class Cabasc(nn.Module):
         for i in range(memory.size(0)): 
             aspect_start = (left_len[i] - aspect_len[i]).item()
             aspect_end = left_len[i] 
-            
+            # remove zeros and flip to get scores in the original order
+            attn_l_reversed = attn_l[i][:aspect_end] 
+            attn_l_reversed = flip(attn_l_reversed, 0)    
             # attention weights for each element in the sentence
             for idx in range(memory_len[i]):
-                if idx < aspect_start: memory[i][idx] *= attn_l[i][idx]             
-                elif idx < aspect_end: memory[i][idx] *= attn_l[i][idx] + attn_r[i][idx - aspect_start]
+                if idx < aspect_start: memory[i][idx] *= attn_l_reversed[idx]             
+                elif idx < aspect_end: memory[i][idx] *= attn_l_reversed[idx] + attn_r[i][idx - aspect_start]
                 else: memory[i][idx] *= attn_r[i][idx - aspect_start]       
           
+        return memory
+    
+    def locationed_memory(self, memory, memory_len, left_len, aspect_len):
+        # based on the absolute distance to the first border word of the aspect
+        for i in range(memory.size(0)):
+            for idx in range(memory_len[i]):
+                aspect_start = left_len[i] - aspect_len[i]
+                aspect_end = left_len[i] 
+                if idx < aspect_start: l = aspect_start.item() - idx                   
+                elif idx <= aspect_end: l = 0
+                else: l = idx - aspect_end.item()
+                memory[i][idx] *= (1-float(l)/int(memory_len[i]))
+               
         return memory
     
     def forward(self, inputs):
@@ -87,24 +96,30 @@ class Cabasc(nn.Module):
         memory = self.embed(text_raw_indices)
         memory = self.squeeze_embedding(memory, memory_len)
         
-        # position attention module
-        # memory = self.locationed_memory(memory, memory_len, left_len, aspect_len)
-        memory = self.context_attention(x_l, x_r, memory, memory_len, aspect_len)
-
         # sentence representation 
         nonzeros_memory = torch.tensor(memory_len, dtype=torch.float).to(self.opt.device)
         v_s = torch.sum(memory, dim = 1)
         v_s = torch.div(v_s, nonzeros_memory.view(nonzeros_memory.size(0),1))  
         v_s = v_s.unsqueeze(dim=1)
         
+        # position attention module
+        if self.memory_weighter == 'pos': 
+            memory = self.locationed_memory(memory, memory_len, left_len, aspect_len)
+        elif self.memory_weighter == 'cam': 
+            # context attention
+            memory = self.context_attention(x_l, x_r, memory, memory_len, aspect_len)
+            # recalculate sentence rep with new memory
+            v_s = torch.sum(memory, dim = 1)                                             
+            v_s = torch.div(v_s, nonzeros_memory.view(nonzeros_memory.size(0),1))  
+            v_s = v_s.unsqueeze(dim=1)
+        
         # content attention module
         for _ in range(self.opt.hops):  
-            x = self.x_linear(x)
-            s = self.s_linear(v_s)
-            v_ts = self.attention(memory, x)              # TO DO: Implement variable arguments function
+            #x = self.x_linear(x)
+            v_ts = self.attention(memory, x)                 
        
         # classifier
-        v_ns = v_ts + v_s                                 # embedd the sentence 
+        v_ns = v_ts + v_s                                 # embedd the sentence
         v_ns = v_ns.view(v_ns.size(0), -1)
         v_ms = F.tanh(self.mlp(v_ns))
         out = self.dense(v_ms)
