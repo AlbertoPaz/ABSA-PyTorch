@@ -14,6 +14,11 @@ The work here uses the framework and some of the implementations developed by [s
 - [ ] Parser
 - [ ] Experiments
 
+## Extensions
+1. Dependency graph to encode word location information
+2. Dependency to generate bigger aspect terms
+3. Implementation for IAN 
+
 ## New models
 
 ### BaseA ([base_a.py](./models/base_a.py))
@@ -37,9 +42,6 @@ Position attention based memory module *words arround the aspect have a greater 
 - The weighted memory is feed into the sentence-level content attention module
 
 ![base_c](assets/base_c.PNG)
-
-## Extensions
-Ontologies
 
 ## Implemented models
 
