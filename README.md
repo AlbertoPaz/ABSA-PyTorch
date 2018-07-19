@@ -1,4 +1,4 @@
-# Dependency-based Attention Network for ABSA
+# Dan: A Dependency-based Attention Network for ABSA
 
 > Aspect Based Sentiment Analysis, PyTorch Implementations.
 >
@@ -11,11 +11,8 @@ The work here uses the framework and some of the implementations developed by [s
 
 - [x] Baseline models
 - [x] Cabasc
-- [ ] Modularization
-- [ ] Validation
-- [ ] Extensions
-- [ ] Evaluation framework
-- [ ] Set up experiments
+- [ ] Parser
+- [ ] Experiments
 
 ## New models
 
