@@ -11,16 +11,21 @@ The work here uses the framework and some of the implementations developed by [s
 
 - [x] Baseline models
 - [x] Cabasc
-- [ ] Parser
+- [X] LCRS
+- [X] Parser
 - [ ] Experiments
 
 ## Extensions
 1. Dependency graph to encode word location information
 2. Dependency to generate bigger aspect terms
-3. Implementation for IAN 
+3. Implementation for Separated models
 
-## New models
+## New models (State of the Art)
+### LCRS ([lcrs.py](./models/lcrs.py))
+Left-Center-Right Separated Neural Network for Aspect-based Sentiment Analysis with Rotatory Attention
+[[pdf]](https://arxiv.org/pdf/1802.00892.pdf)
 
+![LCRS](assets/LCRS.PNG)
 ### BaseA ([base_a.py](./models/base_a.py))
 Content attention module
 - Attention weight of memory slices is calculated using a FwNN with 2 inputs. This differes from memnet that uses concatenation
