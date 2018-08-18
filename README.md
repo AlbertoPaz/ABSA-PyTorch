@@ -21,6 +21,9 @@ The work here uses the framework and some of the implementations developed by [s
 3. Implementation for Separated models
 
 ## New models (State of the Art)
+### GCN
+Aspect Based Sentiment Analysis with Gated Convolutional Networks [[pdf]](https://arxiv.org/pdf/1805.07043.pdf)
+[[code]](https://github.com/wxue004cs/GCAE)
 ### LCRS ([lcrs.py](./models/lcrs.py))
 Left-Center-Right Separated Neural Network for Aspect-based Sentiment Analysis with Rotatory Attention
 [[pdf]](https://arxiv.org/pdf/1802.00892.pdf)
