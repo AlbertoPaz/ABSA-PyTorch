@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # file: train.py
-# author: songyouwei <youwei0314@gmail.com>
+# author: alberto <aj.paz167@gmail.com>
 # Copyright (C) 2018. All Rights Reserved.
 
 from sklearn import metrics
@@ -12,16 +12,20 @@ import argparse
 import math
 import os
 
+import utils
 from data_utils import (build_tokenizer, build_embedding_matrix, ABSADataset,
-                        build_boc, make_dependency_aware)
+                        build_boc)
 
 from models import LSTM, IAN, MemNet, RAM, TD_LSTM, Cabasc, ATAE_LSTM, TNet_LF, AOA, MGAN
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--model_dir', default='experiments/restaurant/base_model', type=str, help = 'Directory containing params.json')
 
 
 class Instructor:
     def __init__(self, opt):
         self.opt = opt
-        # prepare inputs
         tokenizer = build_tokenizer(
             fnames=[opt.dataset_file['train'], opt.dataset_file['test']],
             max_seq_len=opt.max_seq_len,
@@ -30,12 +34,11 @@ class Instructor:
             word2idx=tokenizer.word2idx,
             embed_dim=opt.embed_dim,
             dat_fname='{0}_{1}_embedding_matrix.dat'.format(str(opt.embed_dim), opt.dataset))
-        if opt.dan == True:
+        if opt.model_name != 'base_model':
             boc = build_boc(' ', dat_fname='bag_of_concepts.dat')
             affective_matrix = build_embedding_matrix( word2idx=boc.word2idx,
                 embed_dim=100,dat_fname='100_concept_embeddings.dat')
-            self.model = opt.model_class(embedding_matrix,
-                                         opt).to(opt.device)
+            self.model = opt.model_class(embedding_matrix, opt).to(opt.device)
         else: 
             boc = None
             self.model = opt.model_class(embedding_matrix, opt).to(opt.device)
@@ -50,7 +53,6 @@ class Instructor:
             print("cuda memory allocated:", torch.cuda.memory_allocated(device=opt.device.index))
         self._print_args()
         
-        # Cross validation: torch.utils.data.random_split() 
 
     def _print_args(self):
         n_trainable_params, n_nontrainable_params = 0, 0
@@ -65,6 +67,7 @@ class Instructor:
         for arg in vars(self.opt):
             print('>>> {0}: {1}'.format(arg, getattr(self.opt, arg)))
 
+
     def _reset_params(self):
         for child in self.model.children():
             for p in child.parameters():
@@ -74,6 +77,7 @@ class Instructor:
                     else:
                         stdv = 1. / math.sqrt(p.shape[0])
                         torch.nn.init.uniform_(p, a=-stdv, b=stdv)
+
 
     def _train(self, criterion, optimizer, max_test_acc_overall=0):
         writer = SummaryWriter(log_dir=self.opt.logdir)
@@ -108,14 +112,14 @@ class Instructor:
                     if test_acc > max_test_acc:
                         max_test_acc = test_acc
                         if test_acc > max_test_acc_overall:
-                            if not os.path.exists('data/state_dict'):
-                                os.mkdir('data/state_dict')
-                            path = 'data/state_dict/{0}_{1}_acc{2}'.format(self.opt.model_name, self.opt.dataset, round(test_acc, 4))
+                            path = '{0}/{1}_{2}_acc{3}'.format(self.opt.model_dir,
+                                                               self.opt.model_name, 
+                                                               self.opt.dataset, 
+                                                               round(test_acc, 4))
                             torch.save(self.model.state_dict(), path)
-                            print('>> saved: ' + path)
+                            print('>> saved: ' + path)                      
                     if f1 > max_f1:
                         max_f1 = f1
-
                     writer.add_scalar('loss', loss, global_step)
                     writer.add_scalar('acc', train_acc, global_step)
                     writer.add_scalar('test_acc', test_acc, global_step)
@@ -170,42 +174,15 @@ class Instructor:
 
 
 if __name__ == '__main__':
-    # Hyper Parameters
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--dan', default=False, type=str)
-    parser.add_argument('--model_name', default='base', type=str)
-    parser.add_argument('--dataset', default='laptop', type=str, help='twitter, restaurant, laptop')
-    parser.add_argument('--optimizer', default='adam', type=str)
-    parser.add_argument('--initializer', default='xavier_uniform_', type=str)
-    parser.add_argument('--learning_rate', default=2e-5, type=float)  # try 5e-5, 3e-5, 2e-5 for BERT models (sensitive)
-    parser.add_argument('--dropout', default=0.1, type=float)
-    parser.add_argument('--l2reg', default=0.01, type=float)
-    parser.add_argument('--num_epoch', default=20, type=int)
-    parser.add_argument('--batch_size', default=128, type=int)  # try 16, 32, 64 for BERT models
-    parser.add_argument('--log_step', default=5, type=int)
-    parser.add_argument('--logdir', default='log', type=str)
-    parser.add_argument('--embed_dim', default=300, type=int)
-    parser.add_argument('--hidden_dim', default=300, type=int)
-    parser.add_argument('--max_seq_len', default=80, type=int)
-    parser.add_argument('--polarities_dim', default=3, type=int)
-    parser.add_argument('--hops', default=3, type=int)
-    parser.add_argument('--device', default=None, type=str)
-    opt = parser.parse_args()
-
-    model_classes = {
-        'base': Cabasc, 
-        'cabasc': Cabasc,    
-        'lstm': LSTM,
-        'td_lstm': TD_LSTM,
-        'atae_lstm': ATAE_LSTM,
-        'ian': IAN,
-        'memnet': MemNet,
-        'ram': RAM,
-        'tnet_lf': TNet_LF,
-        'aoa': AOA,
-        'mgan': MGAN,
-    }
+    args = parser.parse_args()
+    json_path = os.path.join(args.model_dir, 'params.json')
+    assert os.path.isfile(json_path),  'No json configuration file found at {}'.format(json_path)
+    opt = utils.Params(json_path)
     
+    model_classes = {
+        'base_model': Cabasc, 
+        'cabasc': Cabasc
+    }
     dataset_files = {
         'twitter': {
             'train': 'data/datasets/Twitter_Train.raw',
@@ -221,7 +198,7 @@ if __name__ == '__main__':
         }
     }
     input_colses = {
-        'base': ['text_raw_indices', 'aspect_indices', 'text_left_with_aspect_indices', 'text_right_with_aspect_indices'],
+        'base_model': ['text_raw_indices', 'aspect_indices', 'text_left_with_aspect_indices', 'text_right_with_aspect_indices'],
         'cabasc': ['text_raw_indices', 'aspect_indices', 'text_left_with_aspect_indices', 'text_right_with_aspect_indices'],
         'lstm': ['text_raw_indices'],
         'td_lstm': ['text_left_with_aspect_indices', 'text_right_with_aspect_indices'],
@@ -247,14 +224,15 @@ if __name__ == '__main__':
         'rmsprop': torch.optim.RMSprop,  # default lr=0.01
         'sgd': torch.optim.SGD,
     }
+
     opt.model_class = model_classes[opt.model_name]
+    opt.model_dir = args.model_dir 
     opt.dataset_file = dataset_files[opt.dataset]
     opt.inputs_cols = input_colses[opt.model_name]
     opt.initializer = initializers[opt.initializer]
     opt.optimizer = optimizers[opt.optimizer]
-    opt.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') \
-        if opt.device is None else torch.device(opt.device)
-            
+    opt.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
     # build common concept embeds for all dataset
     if os.path.exists('data/embeddings/bag_of_concepts.dat') == False:
         print('building the bag of concepts...')
@@ -264,4 +242,4 @@ if __name__ == '__main__':
                                       dat_fname='bag_of_concepts.dat')
 
     ins = Instructor(opt)
-    #ins.run(1)  # _reset_params in every repeat
+    ins.run(1)  # _reset_params in every repeat

@@ -3,10 +3,10 @@
 # author: albertopaz <aj.paz167@gmail.com>
 # Copyright (C) 2019. All Rights Reserved.
 
+import re
 import os
 import pickle
 import numpy as np
-import torch
 import spacy
 import itertools
 import pandas as pd
@@ -15,14 +15,27 @@ from tqdm import tqdm
 from dan_parser import Parser
 from torch.utils.data import Dataset
 
-def make_dependency_aware(dataset, dat_fname):
-    dan_data_path = os.path.join('data/dan/', dat_fname)
+def make_dependency_aware(dataset, raw_data_path, boc):
+    dat_fname = re.findall(r'datasets/(.*?)\..',raw_data_path)[0].lower()
+    dan_data_path = os.path.join('data/dan/dan_{}.dat'.format( dat_fname))
     if os.path.exists(dan_data_path):
         print('loading dan inputs:', dat_fname)
-        dataset = pickle.load(open(dan_data_path, 'rb'))
+        awareness = pickle.load(open(dan_data_path, 'rb'))
     else:
-        print('parsing')
-    return dataset
+        awareness = []
+        print('parsing...')
+        dp = Parser(boc = boc)
+        for i in tqdm(dataset):
+            x = dp.parse(i['text_string'], i['aspect_position'][0], 
+                         i['aspect_position'][1])
+            awareness.append(x)
+            
+        pickle.dump(awareness, open(dan_data_path, 'wb'))
+        
+    # merge regular inputs dictionary with the dan dictionary
+    dataset_v2 = [{**dataset[i], **awareness[i]} for i in range(len(dataset))]
+        
+    return dataset_v2
 
 
 # creates a file with the concepts found accorss all datasets
@@ -91,6 +104,7 @@ def build_tokenizer(fnames, max_seq_len, dat_fname):
         tokenizer.fit_on_text(text)
         tokenizer.tokenize = None
         pickle.dump(tokenizer, open(tokenizer_path, 'wb'))
+
     return tokenizer
 
 
@@ -157,7 +171,7 @@ class Tokenizer(object):
         self.word2idx = {}
         self.idx2word = {}
         self.idx = 1
-        self.tokenize = self.init_tokenizer()
+        self.init_tokenizer()
 
     def init_tokenizer(self):
         self.tokenize = spacy.load("en_core_web_sm") 
@@ -187,7 +201,7 @@ class Tokenizer(object):
     
 
 class ABSADataset(Dataset):
-    def __init__(self, fname, tokenizer):
+    def __init__(self, fname, tokenizer, boc = None):
         print('reading {} data'.format(fname))
         tokenizer.init_tokenizer()
         fin = open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
@@ -209,7 +223,9 @@ class ABSADataset(Dataset):
             aspect_indices = tokenizer.text_to_sequence(aspect)
             left_context_len = np.sum(text_left_indices != 0)
             aspect_len = np.sum(aspect_indices != 0)
-            aspect_in_text = torch.tensor([left_context_len.item(), (left_context_len + aspect_len - 1).item()])
+            text_string = text_string = text_left + ' ' + aspect + ' ' + text_right
+            aspect_position = [left_context_len.item(), (left_context_len + aspect_len).item()]
+            #aspect_position = torch.tensor([left_context_len.item(), (left_context_len + aspect_len - 1).item()])
             polarity = int(polarity) + 1
                    
             data = {
@@ -220,12 +236,18 @@ class ABSADataset(Dataset):
                 'text_right_indices': text_right_indices,
                 'text_right_with_aspect_indices': text_right_with_aspect_indices,
                 'aspect_indices': aspect_indices,
-                'aspect_in_text': aspect_in_text,
                 'polarity': polarity,
+                'text_string': text_string,  
+                'aspect_position': aspect_position,
             }
 
             all_data.append(data)
         self.data = all_data
+        tokenizer = None
+        
+        if boc != None:
+            self.data = make_dependency_aware(self.data, fname, boc)
+
         print('all input prepared (✓)')
 
     def __getitem__(self, index):
